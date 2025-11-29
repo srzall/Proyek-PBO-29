@@ -10,183 +10,255 @@ public class LoginPanel extends JPanel {
     private JTextField txtUser;
     private JPasswordField txtPass;
 
-    private Color colorTheme = new Color(52, 152, 219); 
-    private Color colorButton = Color.BLACK; 
+    private Color bgRight = new Color(10, 25, 47);
+    private Color btnColor = new Color(0, 122, 255);
+    private Color btnHover = new Color(0, 100, 230);
+    private Color textWhite = Color.WHITE;
+    private Color textGray = new Color(170, 170, 170);
+    private Color inputBorder = new Color(60, 80, 100);
+    private Color inputBg = new Color(20, 35, 60);
 
     public LoginPanel(Main mainFrame) {
         this.mainFrame = mainFrame;
-        setLayout(new GridLayout(1, 2)); 
+        setLayout(new GridLayout(1, 2));
 
-        JPanel leftPanel = new JPanel();
-        leftPanel.setBackground(colorTheme);
-        leftPanel.setLayout(new GridBagLayout());
-
-        GridBagConstraints gbcLeft = new GridBagConstraints();
-        gbcLeft.gridx = 0;
-        gbcLeft.gridy = 0;
-        gbcLeft.insets = new Insets(0, 0, 20, 0);
-
-        JLabel lblWelcome = new JLabel("<html><div style='text-align: center;'>Welcome to<br>CINE-TIX</div></html>");
-        lblWelcome.setFont(new Font("SansSerif", Font.BOLD, 32));
-        lblWelcome.setForeground(Color.WHITE);
-        leftPanel.add(lblWelcome, gbcLeft);
-
-        gbcLeft.gridy++;
-        String pathGambar = "assets/images/image.png"; 
-
-        JLabel lblImage;
-        if (new File(pathGambar).exists()) {
-            ImageIcon originalIcon = new ImageIcon(pathGambar);
-            Image scaledImage = originalIcon.getImage().getScaledInstance(180, 250, Image.SCALE_SMOOTH);
-            lblImage = new JLabel(new ImageIcon(scaledImage));
-            lblImage.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-        } else {
-            lblImage = new JLabel("<html><center>Cinema<br>Kiosk</center></html>", SwingConstants.CENTER);
-            lblImage.setPreferredSize(new Dimension(180, 250));
-            lblImage.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-            lblImage.setForeground(Color.WHITE);
-            lblImage.setFont(new Font("SansSerif", Font.BOLD, 20));
-        }
-        leftPanel.add(lblImage, gbcLeft);
-
-        gbcLeft.gridy++;
-        JLabel lblDesc = new JLabel("<html><center>Experience the best movies<br>with comfort and joy.</center></html>");
-        lblDesc.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        lblDesc.setForeground(Color.WHITE);
-        gbcLeft.insets = new Insets(20, 0, 0, 0);
-        leftPanel.add(lblDesc, gbcLeft);
-
+        JPanel leftPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                try {
+                    String path = "assets/images/image.jpg"; 
+                    if (new File(path).exists()) {
+                        ImageIcon icon = new ImageIcon(path);
+                        Image img = icon.getImage();
+                        
+                        Graphics2D g2 = (Graphics2D) g;
+                        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                        
+                        double scaleWidth = (double) getWidth() / img.getWidth(null);
+                        double scaleHeight = (double) getHeight() / img.getHeight(null);
+                        double scale = Math.max(scaleWidth, scaleHeight);
+                        
+                        int w = (int) (img.getWidth(null) * scale);
+                        int h = (int) (img.getHeight(null) * scale);
+                        int x = (getWidth() - w) / 2;
+                        int y = (getHeight() - h) / 2;
+                        
+                        g2.drawImage(img, x, y, w, h, null);
+                    } else {
+                        g.setColor(new Color(20, 20, 20));
+                        g.fillRect(0, 0, getWidth(), getHeight());
+                    }
+                } catch (Exception e) { e.printStackTrace(); }
+            }
+        };
+        add(leftPanel);
 
         JPanel rightPanel = new JPanel();
-        rightPanel.setBackground(Color.WHITE);
-        rightPanel.setLayout(new GridBagLayout());
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        rightPanel.setBackground(bgRight);
+        rightPanel.setBorder(new EmptyBorder(50, 60, 50, 60)); 
+
+        JLabel lblBrand = new JLabel("CINETIX");
+        lblBrand.setFont(new Font("SansSerif", Font.BOLD, 28));
+        lblBrand.setForeground(textWhite);
+        lblBrand.setAlignmentX(Component.CENTER_ALIGNMENT); 
         
-        JPanel formBox = new JPanel();
-        formBox.setLayout(new BoxLayout(formBox, BoxLayout.Y_AXIS));
-        formBox.setBackground(Color.WHITE);
-        formBox.setBorder(new EmptyBorder(20, 40, 20, 40));
+        JLabel lblWelcome = new JLabel("Welcome Back");
+        lblWelcome.setFont(new Font("SansSerif", Font.BOLD, 22));
+        lblWelcome.setForeground(textWhite);
+        lblWelcome.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblTitle = new JLabel("Sign In");
-        lblTitle.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblTitle.setForeground(new Color(50, 50, 50));
-        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-        formBox.add(lblTitle);
+        JLabel lblSub = new JLabel("Please enter your details");
+        lblSub.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        lblSub.setForeground(textGray);
+        lblSub.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        formBox.add(Box.createRigidArea(new Dimension(0, 30)));
+        Dimension inputSize = new Dimension(320, 45);
 
         JLabel lblUser = new JLabel("Username");
-        lblUser.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        lblUser.setForeground(Color.GRAY);
-        lblUser.setAlignmentX(Component.LEFT_ALIGNMENT);
-        formBox.add(lblUser);
-        
-        formBox.add(Box.createRigidArea(new Dimension(0, 5)));
+        lblUser.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblUser.setForeground(textGray);
+        lblUser.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JPanel pnlUserLbl = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        pnlUserLbl.setOpaque(false);
+        pnlUserLbl.setMaximumSize(new Dimension(320, 20));
+        pnlUserLbl.add(lblUser);
 
-        txtUser = new JTextField();
-        txtUser.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        txtUser.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        formBox.add(txtUser);
-
-        formBox.add(Box.createRigidArea(new Dimension(0, 15)));
+        txtUser = new RoundedTextField(15); 
+        txtUser.setMaximumSize(inputSize);
+        txtUser.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel lblPass = new JLabel("Password");
-        lblPass.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        lblPass.setForeground(Color.GRAY);
-        lblPass.setAlignmentX(Component.LEFT_ALIGNMENT);
-        formBox.add(lblPass);
+        lblPass.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblPass.setForeground(textGray);
+        JPanel pnlPassLbl = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        pnlPassLbl.setOpaque(false);
+        pnlPassLbl.setMaximumSize(new Dimension(320, 20));
+        pnlPassLbl.add(lblPass);
 
-        formBox.add(Box.createRigidArea(new Dimension(0, 5)));
+        txtPass = new RoundedPasswordField(15);
+        txtPass.setMaximumSize(inputSize);
+        txtPass.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        txtPass = new JPasswordField();
-        txtPass.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        txtPass.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        formBox.add(txtPass);
-
-        formBox.add(Box.createRigidArea(new Dimension(0, 30)));
-
-        JButton btnLogin = new JButton("SIGN IN");
-        btnLogin.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        btnLogin.setBackground(colorButton); 
-        btnLogin.setForeground(Color.WHITE); 
-        btnLogin.setFont(new Font("SansSerif", Font.BOLD, 14));
-        btnLogin.setFocusPainted(false); 
-        btnLogin.setBorderPainted(false); 
-        btnLogin.setOpaque(true); 
-        btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+        JButton btnLogin = new RoundedButton("Log In", 15); 
+        btnLogin.setMaximumSize(inputSize); 
+        btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnLogin.addActionListener(e -> handleLogin());
-        formBox.add(btnLogin);
 
-        formBox.add(Box.createRigidArea(new Dimension(0, 15)));
-
-        JPanel registerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        registerPanel.setBackground(Color.WHITE);
-        registerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JPanel linkPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        linkPanel.setOpaque(false);
+        linkPanel.setMaximumSize(new Dimension(320, 30));
         
-        JLabel lblNoAccount = new JLabel("New to CineTix? ");
-        lblNoAccount.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        JLabel lblDontHave = new JLabel("Don't have an account? ");
+        lblDontHave.setForeground(textGray);
+        lblDontHave.setFont(new Font("SansSerif", Font.PLAIN, 13));
         
-        JLabel lblRegister = new JLabel("Create Account");
-        lblRegister.setFont(new Font("SansSerif", Font.BOLD, 12));
-        lblRegister.setForeground(colorTheme);
-        lblRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        lblRegister.addMouseListener(new MouseAdapter() {
+        JLabel lblSignUp = new JLabel("Sign up");
+        lblSignUp.setForeground(btnColor);
+        lblSignUp.setFont(new Font("SansSerif", Font.BOLD, 13));
+        lblSignUp.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblSignUp.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 handleRegister();
             }
         });
 
-        registerPanel.add(lblNoAccount);
-        registerPanel.add(lblRegister);
-        formBox.add(registerPanel);
+        linkPanel.add(lblDontHave);
+        linkPanel.add(lblSignUp);
 
-        rightPanel.add(formBox);
+        rightPanel.add(Box.createVerticalGlue()); 
+        rightPanel.add(lblBrand);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+        
+        rightPanel.add(lblWelcome);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        rightPanel.add(lblSub);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        add(leftPanel);
+        rightPanel.add(pnlUserLbl);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        rightPanel.add(txtUser);
+        
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        
+        rightPanel.add(pnlPassLbl);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        rightPanel.add(txtPass);
+        
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        rightPanel.add(btnLogin);
+        
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        rightPanel.add(linkPanel);
+        rightPanel.add(Box.createVerticalGlue()); 
+
         add(rightPanel);
+    }
+
+    class RoundedTextField extends JTextField {
+        private int radius;
+        public RoundedTextField(int radius) {
+            this.radius = radius;
+            setOpaque(false); 
+            setForeground(Color.WHITE);
+            setCaretColor(Color.WHITE);
+            setFont(new Font("SansSerif", Font.PLAIN, 14));
+            setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15)); 
+        }
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(inputBg); 
+            g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, radius, radius);
+            g2.setColor(inputBorder);
+            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, radius, radius);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+    }
+
+    class RoundedPasswordField extends JPasswordField {
+        private int radius;
+        public RoundedPasswordField(int radius) {
+            this.radius = radius;
+            setOpaque(false);
+            setForeground(Color.WHITE);
+            setCaretColor(Color.WHITE);
+            setFont(new Font("SansSerif", Font.PLAIN, 14));
+            setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        }
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(inputBg);
+            g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, radius, radius);
+            g2.setColor(inputBorder);
+            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, radius, radius);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+    }
+
+    class RoundedButton extends JButton {
+        private int radius;
+        public RoundedButton(String text, int radius) {
+            super(text);
+            this.radius = radius;
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setOpaque(false);
+            setForeground(Color.WHITE);
+            setFont(new Font("SansSerif", Font.BOLD, 15));
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            if (getModel().isRollover()) {
+                g2.setColor(btnHover);
+            } else {
+                g2.setColor(btnColor);
+            }
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 
     private void handleLogin() {
         String user = txtUser.getText();
         String pass = new String(txtPass.getPassword());
-
-        if (user.isEmpty() || pass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Username dan Password tidak boleh kosong!", "Peringatan", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        if (user.isEmpty() || pass.isEmpty()) return;
 
         int userId = DatabaseHelper.loginUser(user, pass);
-
         if (userId != -1) {
             mainFrame.setCurrentUser(userId); 
-            mainFrame.loadHomePanel(); 
+            mainFrame.showPanel("HOME"); 
         } else {
-            JOptionPane.showMessageDialog(this, "Username atau Password Salah!", "Login Gagal", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Login Gagal!", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void handleRegister() {
         String user = txtUser.getText();
         String pass = new String(txtPass.getPassword());
-
         if (user.isEmpty() || pass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Isi Username dan Password di kolom input untuk mendaftar.", "Info Register", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Isi data dulu.", "Info", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Daftarkan akun baru dengan:\nUsername: " + user + "\nPassword: " + pass, 
-            "Konfirmasi Daftar", JOptionPane.YES_NO_OPTION);
-
+        int confirm = JOptionPane.showConfirmDialog(this, "Daftar Akun Baru?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = DatabaseHelper.registerUser(user, pass);
-            
-            if (success) {
-                JOptionPane.showMessageDialog(this, "Akun berhasil dibuat! Silakan klik SIGN IN.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+            if (DatabaseHelper.registerUser(user, pass)) {
+                JOptionPane.showMessageDialog(this, "Sukses Daftar! Silakan Login.");
             } else {
-                JOptionPane.showMessageDialog(this, "Gagal mendaftar. Username mungkin sudah dipakai.", "Gagal", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Gagal. Username sudah ada.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

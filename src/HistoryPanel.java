@@ -5,6 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
+import java.io.File;
 import java.util.List;
 
 public class HistoryPanel extends JPanel {
@@ -27,8 +28,27 @@ public class HistoryPanel extends JPanel {
         header.setOpaque(false);
         header.setBorder(new EmptyBorder(20, 30, 20, 30));
 
-        JButton btnBack = createStyledButton("<< KEMBALI", new Color(50, 55, 65), Color.WHITE);
-        btnBack.setPreferredSize(new Dimension(120, 40));
+        JButton btnBack = new JButton();
+        try {
+            String arrowPath = "assets/images/arrow.png"; 
+            if (new File(arrowPath).exists()) {
+                ImageIcon rawIcon = new ImageIcon(arrowPath);
+                Image imgArrow = rawIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+                btnBack.setIcon(new ImageIcon(imgArrow));
+            } else {
+                btnBack.setText("BACK");
+                btnBack.setForeground(Color.WHITE);
+            }
+        } catch (Exception e) {
+            btnBack.setText("BACK");
+        }
+        
+        btnBack.setPreferredSize(new Dimension(50, 40));
+        btnBack.setContentAreaFilled(false);
+        btnBack.setBorderPainted(false);
+        btnBack.setFocusPainted(false);
+        btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
         btnBack.addActionListener(e -> mainFrame.showPanel("HOME"));
 
         JLabel lblTitle = new JLabel("RIWAYAT TRANSAKSI", SwingConstants.CENTER);
@@ -37,7 +57,7 @@ public class HistoryPanel extends JPanel {
 
         JPanel dummy = new JPanel(); 
         dummy.setOpaque(false); 
-        dummy.setPreferredSize(new Dimension(120, 40));
+        dummy.setPreferredSize(new Dimension(50, 40));
 
         header.add(btnBack, BorderLayout.WEST);
         header.add(lblTitle, BorderLayout.CENTER);
@@ -142,28 +162,5 @@ public class HistoryPanel extends JPanel {
         for (int i = 0; i < historyTable.getColumnCount(); i++) {
             historyTable.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
         }
-    }
-
-    private JButton createStyledButton(String text, Color bg, Color fg) {
-        JButton btn = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                if (getModel().isRollover()) g2.setColor(bg.brighter());
-                else g2.setColor(bg);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        btn.setForeground(fg);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 12));
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setOpaque(false);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return btn;
     }
 }

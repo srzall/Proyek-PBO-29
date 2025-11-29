@@ -1,10 +1,8 @@
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.util.List;
 
@@ -13,16 +11,15 @@ public class HomePanel extends JPanel {
     private JPanel moviesContainer;
     private JScrollPane scrollPane;
 
-    private final int CARD_WIDTH = 220; 
-    private final int IMAGE_HEIGHT = 330; 
-    private final int CARD_HEIGHT = 410; 
-    private final int GAP = 25; 
+    private final int CARD_WIDTH = 200; 
+    private final int IMAGE_HEIGHT = 300; 
+    private final int CARD_HEIGHT = 420; 
+    private final int GAP = 30; 
 
-    private Color bgMain = new Color(20, 23, 30); 
-    private Color bgCard = new Color(35, 40, 50); 
-    private Color accentColor = new Color(0, 168, 255); 
-    private Color textWhite = new Color(245, 245, 245);
-    private Color textGray = new Color(176, 190, 197);
+    private Color bgMain = new Color(0, 18, 50);
+    private Color accentRed = new Color(231, 76, 60);
+    private Color textWhite = Color.WHITE;
+    private Color textGray = new Color(170, 170, 170);
 
     public HomePanel(Main mainFrame) {
         this.mainFrame = mainFrame;
@@ -31,40 +28,90 @@ public class HomePanel extends JPanel {
 
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(bgMain);
-        header.setPreferredSize(new Dimension(0, 80));
-        header.setBorder(new EmptyBorder(20, 40, 10, 40));
+        header.setPreferredSize(new Dimension(0, 90)); 
+        header.setBorder(new EmptyBorder(15, 40, 15, 40));
 
-        JLabel lblBrand = new JLabel("NOW SHOWING");
-        lblBrand.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblBrand.setForeground(accentColor); 
+        JLabel lblBrand = new JLabel("CINETIX");
+        lblBrand.setFont(new Font("SansSerif", Font.BOLD, 24));
+        lblBrand.setForeground(textWhite);
         header.add(lblBrand, BorderLayout.WEST);
 
-        JPanel navButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 0));
-        navButtons.setOpaque(false);
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10)); 
+        searchPanel.setOpaque(false);
+        searchPanel.add(createRoundedSearchBar()); 
+        header.add(searchPanel, BorderLayout.CENTER);
+
+        JPanel rightMenu = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 5)); 
+        rightMenu.setOpaque(false);
+
+        JLabel lblHistory = new JLabel("Riwayat");
+        lblHistory.setFont(new Font("SansSerif", Font.BOLD, 14));
+        lblHistory.setForeground(textWhite);
+        lblHistory.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblHistory.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) { mainFrame.showHistoryPanel(); }
+        });
+
+        JButton btnLogout = new JButton();
+        try {
+            String logoutPath = "assets/images/logout.png";
+            if (new File(logoutPath).exists()) {
+                ImageIcon icon = new ImageIcon(logoutPath);
+                Image img = icon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+                btnLogout.setIcon(new ImageIcon(img));
+            } else {
+                btnLogout.setText("LOGOUT"); 
+                btnLogout.setForeground(Color.WHITE);
+            }
+        } catch (Exception e) {
+            btnLogout.setText("LOGOUT");
+        }
+
+        btnLogout.setPreferredSize(new Dimension(50, 50));
+        btnLogout.setContentAreaFilled(false);
+        btnLogout.setBorderPainted(false);
+        btnLogout.setFocusPainted(false);
+        btnLogout.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        JButton btnHistory = createHeaderButton("Riwayat", new Color(50, 60, 75));
-        btnHistory.addActionListener(e -> mainFrame.showHistoryPanel());
-        
-        JButton btnLogout = createHeaderButton("Logout", new Color(231, 76, 60)); 
         btnLogout.addActionListener(e -> {
             mainFrame.setCurrentUser(-1);
             mainFrame.showPanel("LOGIN");
         });
 
-        navButtons.add(btnHistory);
-        navButtons.add(btnLogout);
-        header.add(navButtons, BorderLayout.EAST);
+        rightMenu.add(lblHistory);                
+        rightMenu.add(btnLogout);                 
+        
+        header.add(rightMenu, BorderLayout.EAST);
+
         add(header, BorderLayout.NORTH);
+
+        JPanel mainContent = new JPanel();
+        mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
+        mainContent.setBackground(bgMain);
+        mainContent.setBorder(new EmptyBorder(20, 40, 40, 40));
+
+        int userId = mainFrame.getCurrentUser();
+        String userName = DatabaseHelper.getUsername(userId);
+        
+        JLabel lblSection = new JLabel("Halo " + userName + ", Ini Film Terbaru");
+        lblSection.setFont(new Font("SansSerif", Font.BOLD, 28));
+        lblSection.setForeground(textWhite);
+        lblSection.setAlignmentX(Component.LEFT_ALIGNMENT);
+        mainContent.add(lblSection);
+        
+        mainContent.add(Box.createRigidArea(new Dimension(0, 20))); 
 
         moviesContainer = new JPanel();
         moviesContainer.setBackground(bgMain);
-        moviesContainer.setBorder(new EmptyBorder(10, 30, 40, 30)); 
+        moviesContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        mainContent.add(moviesContainer);
 
-        scrollPane = new JScrollPane(moviesContainer);
+        scrollPane = new JScrollPane(mainContent);
         scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getViewport().setBackground(bgMain);
+        
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0)); 
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16); 
 
         scrollPane.addComponentListener(new ComponentAdapter() {
             @Override
@@ -77,15 +124,35 @@ public class HomePanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    private JTextField createRoundedSearchBar() {
+        JTextField txtSearch = new JTextField("  Film apa yang kamu inginkan?") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(255, 255, 255, 20)); 
+                g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 30, 30); 
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+        txtSearch.setPreferredSize(new Dimension(400, 35));
+        txtSearch.setOpaque(false);
+        txtSearch.setForeground(Color.LIGHT_GRAY);
+        txtSearch.setCaretColor(Color.WHITE);
+        txtSearch.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        txtSearch.setBorder(new RoundedBorder(30)); 
+        
+        return txtSearch;
+    }
+
     private void loadMovies() {
         moviesContainer.removeAll();
         List<String[]> movies = DatabaseHelper.getAllMovies();
 
         if (movies.isEmpty()) {
             JLabel lblEmpty = new JLabel("Belum ada film tersedia.", SwingConstants.CENTER);
-            lblEmpty.setFont(new Font("SansSerif", Font.PLAIN, 18));
             lblEmpty.setForeground(textGray);
-            moviesContainer.setLayout(new BorderLayout());
             moviesContainer.add(lblEmpty);
         } else {
             for (String[] movie : movies) {
@@ -96,45 +163,23 @@ public class HomePanel extends JPanel {
     }
 
     private void updateLayoutGrid() {
-        int availableWidth = scrollPane.getViewport().getWidth() - 60; 
+        int availableWidth = scrollPane.getViewport().getWidth() - 80; 
         if (availableWidth <= 0) return;
-
         int columns = Math.max(1, availableWidth / (CARD_WIDTH + GAP));
-        
         GridLayout layout = new GridLayout(0, columns, GAP, GAP);
         moviesContainer.setLayout(layout);
-        
         moviesContainer.revalidate();
         moviesContainer.repaint();
     }
 
-    private JButton createHeaderButton(String text, Color bg) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 12));
-        btn.setForeground(Color.WHITE);
-        btn.setBackground(bg);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setPreferredSize(new Dimension(100, 35));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { btn.setBackground(bg.brighter()); }
-            public void mouseExited(MouseEvent e) { btn.setBackground(bg); }
-        });
-        return btn;
-    }
-
     private JPanel createMovieCard(String[] movieData) {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(bgCard);
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(bgMain);
         card.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
-        card.setBorder(BorderFactory.createMatteBorder(0,0,3,0, accentColor)); 
-
+        
         JLabel lblImage = new JLabel();
-        lblImage.setHorizontalAlignment(SwingConstants.CENTER);
-        lblImage.setBackground(bgCard); 
-        lblImage.setOpaque(true);
+        lblImage.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         String path = movieData[4];
         try {
@@ -143,69 +188,67 @@ public class HomePanel extends JPanel {
                 Image img = icon.getImage().getScaledInstance(CARD_WIDTH, IMAGE_HEIGHT, Image.SCALE_SMOOTH);
                 lblImage.setIcon(new ImageIcon(img));
             } else {
-                lblImage.setText("<html><center>No Image</center></html>");
-                lblImage.setForeground(textGray);
+                lblImage.setText("No Image");
+                lblImage.setForeground(Color.WHITE);
             }
-        } catch (Exception e) { }
-        
-        card.add(lblImage, BorderLayout.CENTER);
+        } catch (Exception e) {}
+        card.add(lblImage);
 
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.setBackground(bgCard);
-        infoPanel.setBorder(new EmptyBorder(12, 10, 15, 10)); 
+        card.add(Box.createRigidArea(new Dimension(0, 10)));
 
         JLabel lblTitle = new JLabel(movieData[1]);
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 15));
         lblTitle.setForeground(textWhite);
-        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(lblTitle);
+
+        card.add(Box.createRigidArea(new Dimension(0, 5)));
+
         JLabel lblGenre = new JLabel(movieData[2]); 
         lblGenre.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        lblGenre.setForeground(accentColor); 
-        lblGenre.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblGenre.setForeground(textGray); 
+        lblGenre.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(lblGenre);
 
-        JButton btnDetail = new JButton("DETAIL");
-        btnDetail.setFont(new Font("SansSerif", Font.BOLD, 11));
-        btnDetail.setBackground(new Color(25, 118, 210)); 
+        card.add(Box.createRigidArea(new Dimension(0, 15)));
+
+        JButton btnDetail = new JButton("Detail");
+        btnDetail.setFont(new Font("SansSerif", Font.PLAIN, 13));
         btnDetail.setForeground(Color.WHITE);
-        btnDetail.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnDetail.setFocusPainted(false);
-        btnDetail.setBorderPainted(false);
+        btnDetail.setContentAreaFilled(false);
         btnDetail.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnDetail.setMaximumSize(new Dimension(120, 30)); 
-        btnDetail.setMargin(new Insets(0,0,0,0));
+        btnDetail.setBorder(new RoundedBorder(30)); 
+        btnDetail.setPreferredSize(new Dimension(100, 30));
+        
+        btnDetail.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnDetail.setForeground(accentRed); }
+            public void mouseExited(MouseEvent e) { btnDetail.setForeground(Color.WHITE); }
+        });
         
         btnDetail.addActionListener(e -> mainFrame.showDetailMovie(movieData));
         
-        infoPanel.add(lblTitle);
-        infoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        infoPanel.add(lblGenre);
-        infoPanel.add(Box.createRigidArea(new Dimension(0, 12)));
-        infoPanel.add(btnDetail);
-
-        card.add(infoPanel, BorderLayout.SOUTH);
-
-        MouseAdapter hoverCard = new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { 
-                Color hoverBg = new Color(45, 50, 65);
-                card.setBackground(hoverBg); 
-                infoPanel.setBackground(hoverBg);
-                lblImage.setBackground(hoverBg);
-                btnDetail.setBackground(accentColor); 
-            }
-            public void mouseExited(MouseEvent e) { 
-                card.setBackground(bgCard); 
-                infoPanel.setBackground(bgCard);
-                lblImage.setBackground(bgCard);
-                btnDetail.setBackground(new Color(25, 118, 210)); 
-            }
-        };
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER)); 
+        btnPanel.setBackground(bgMain);
+        btnPanel.setAlignmentX(Component.LEFT_ALIGNMENT); 
+        btnPanel.setMaximumSize(new Dimension(CARD_WIDTH, 40)); 
+        btnPanel.add(btnDetail);
         
-        card.addMouseListener(hoverCard);
-        lblImage.addMouseListener(hoverCard);
-        infoPanel.addMouseListener(hoverCard);
+        card.add(btnPanel);
 
         return card;
+    }
+
+    private static class RoundedBorder implements Border {
+        private int radius;
+        RoundedBorder(int radius) { this.radius = radius; }
+        public Insets getBorderInsets(Component c) { return new Insets(4, 20, 4, 20); }
+        public boolean isBorderOpaque() { return true; }
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(Color.WHITE); 
+            g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+        }
     }
 }

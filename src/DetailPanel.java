@@ -1,30 +1,53 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 
 public class DetailPanel extends JPanel {
     private Main mainFrame;
     private String[] movieData;
+    private Image bgImage;
+    private String selectedTime = "10.00";
 
-    private Color bgDark = new Color(15, 20, 25); 
-    private Color bgBlack = new Color(5, 5, 10); 
-    private Color accentBlue = new Color(0, 168, 255); 
+    private Color accentYellow = new Color(255, 215, 0);
     private Color textWhite = new Color(245, 245, 245);
+    private Color textGray = new Color(200, 200, 200);
 
     public DetailPanel(Main mainFrame, String[] movieData) {
         this.mainFrame = mainFrame;
         this.movieData = movieData;
 
+        try {
+            if (new File(movieData[4]).exists()) {
+                bgImage = ImageIO.read(new File(movieData[4]));
+            }
+        } catch (Exception e) {}
+
         setLayout(new BorderLayout());
         
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        header.setOpaque(false); 
-        header.setBorder(new EmptyBorder(20, 20, 0, 0));
+        header.setOpaque(false);
+        header.setBorder(new EmptyBorder(30, 40, 0, 0));
         
-        JButton btnBack = createStyledButton("<< KEMBALI", new Color(50, 50, 50), Color.WHITE, false);
-        btnBack.setPreferredSize(new Dimension(120, 40));
+        JButton btnBack = new JButton();
+        try {
+            String arrowPath = "assets/images/arrow.png";
+            ImageIcon rawIcon = new ImageIcon(arrowPath);
+            Image imgArrow = rawIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+            btnBack.setIcon(new ImageIcon(imgArrow));
+        } catch (Exception e) {
+            btnBack.setText("BACK");
+        }
+        
+        btnBack.setContentAreaFilled(false);
+        btnBack.setBorderPainted(false);
+        btnBack.setFocusPainted(false);
+        btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
         btnBack.addActionListener(e -> mainFrame.showPanel("HOME"));
         header.add(btnBack);
         
@@ -33,161 +56,219 @@ public class DetailPanel extends JPanel {
         JPanel content = new JPanel(new GridBagLayout());
         content.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        
-        gbc.insets = new Insets(10, 50, 10, 50); 
+        gbc.insets = new Insets(0, 50, 50, 50); 
         gbc.fill = GridBagConstraints.BOTH;
 
         gbc.gridx = 0; 
         gbc.gridy = 0;
-        gbc.weightx = 0; 
-        gbc.anchor = GridBagConstraints.NORTHWEST; 
-        
-        JPanel posterPanel = new JPanel(new BorderLayout());
-        posterPanel.setBackground(Color.BLACK);
-        posterPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 4, 0, accentBlue));
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
 
         ImageIcon icon = new ImageIcon(movieData[4]); 
-        Image img = icon.getImage().getScaledInstance(300, 450, Image.SCALE_SMOOTH);
+        Image img = icon.getImage().getScaledInstance(320, 480, Image.SCALE_SMOOTH);
         JLabel lblPoster = new JLabel(new ImageIcon(img));
-        posterPanel.add(lblPoster, BorderLayout.CENTER);
-        
-        content.add(posterPanel, gbc);
+        lblPoster.setBorder(BorderFactory.createLineBorder(new Color(255,255,255, 50), 1));
+        content.add(lblPoster, gbc);
 
         gbc.gridx = 1;
-        gbc.gridy = 0;
         gbc.weightx = 1.0; 
-        gbc.anchor = GridBagConstraints.NORTHWEST; 
         
-        JPanel infoBox = new JPanel();
-        infoBox.setLayout(new BoxLayout(infoBox, BoxLayout.Y_AXIS));
-        infoBox.setOpaque(false);
-        infoBox.setBorder(new EmptyBorder(0, 40, 0, 0)); 
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setOpaque(false);
+        infoPanel.setBorder(new EmptyBorder(0, 50, 0, 0));
 
-        JLabel lblTitle = new JLabel("<html>" + movieData[1] + "</html>"); 
-        lblTitle.setFont(new Font("SansSerif", Font.BOLD, 42));
+        JLabel lblTitle = new JLabel("<html>" + movieData[1].toUpperCase() + "</html>");
+        lblTitle.setFont(new Font("SansSerif", Font.BOLD, 48));
         lblTitle.setForeground(textWhite);
-        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT); 
-        infoBox.add(lblTitle);
-        
-        infoBox.add(Box.createRigidArea(new Dimension(0, 10)));
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        infoPanel.add(lblTitle);
+
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         JPanel metaPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         metaPanel.setOpaque(false);
-        metaPanel.setAlignmentX(Component.LEFT_ALIGNMENT); 
-        
-        JLabel lblGenre = new JLabel(movieData[2]);
-        lblGenre.setFont(new Font("SansSerif", Font.PLAIN, 18));
-        lblGenre.setForeground(accentBlue);
-        metaPanel.add(lblGenre);
-        
-        JLabel lblDiv = new JLabel("  |  ");
-        lblDiv.setFont(new Font("SansSerif", Font.PLAIN, 18));
-        lblDiv.setForeground(Color.GRAY);
-        metaPanel.add(lblDiv);
+        metaPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        addMetaTag(metaPanel, movieData[2]);
+        addDivider(metaPanel);
+        addMetaTag(metaPanel, "2h 15m");
+        addDivider(metaPanel);
+        addMetaTag(metaPanel, "⭐ 4.8");
+        addDivider(metaPanel);
+        
         JLabel lblPrice = new JLabel("Rp " + formatHarga(movieData[3]));
-        lblPrice.setFont(new Font("SansSerif", Font.BOLD, 20));
-        lblPrice.setForeground(new Color(46, 204, 113));
+        lblPrice.setFont(new Font("SansSerif", Font.BOLD, 18));
+        lblPrice.setForeground(accentYellow);
         metaPanel.add(lblPrice);
-        
-        infoBox.add(metaPanel);
-        
-        infoBox.add(Box.createRigidArea(new Dimension(0, 20)));
-        JSeparator sep = new JSeparator();
-        sep.setMaximumSize(new Dimension(1000, 1));
-        sep.setForeground(new Color(60, 60, 60));
-        sep.setBackground(new Color(60, 60, 60));
-        sep.setAlignmentX(Component.LEFT_ALIGNMENT);
-        infoBox.add(sep);
-        infoBox.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        JLabel lblSinopsisHead = new JLabel("SINOPSIS");
-        lblSinopsisHead.setFont(new Font("SansSerif", Font.BOLD, 14));
-        lblSinopsisHead.setForeground(Color.GRAY);
-        lblSinopsisHead.setAlignmentX(Component.LEFT_ALIGNMENT); 
-        infoBox.add(lblSinopsisHead);
-        infoBox.add(Box.createRigidArea(new Dimension(0, 10)));
+        infoPanel.add(metaPanel);
 
-        JTextArea txtDesc = new JTextArea(movieData[6]); 
-        txtDesc.setFont(new Font("SansSerif", Font.PLAIN, 16)); 
-        txtDesc.setForeground(new Color(210, 210, 210));
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        JLabel lblSinopsis = new JLabel("SINOPSIS");
+        lblSinopsis.setFont(new Font("SansSerif", Font.BOLD, 16));
+        lblSinopsis.setForeground(accentYellow);
+        lblSinopsis.setAlignmentX(Component.LEFT_ALIGNMENT);
+        infoPanel.add(lblSinopsis);
+
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        JTextArea txtDesc = new JTextArea(movieData[6]);
+        txtDesc.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        txtDesc.setForeground(textGray);
         txtDesc.setLineWrap(true);
         txtDesc.setWrapStyleWord(true);
         txtDesc.setEditable(false);
         txtDesc.setOpaque(false);
         txtDesc.setBorder(null);
-        txtDesc.setAlignmentX(Component.LEFT_ALIGNMENT); 
-        txtDesc.setMaximumSize(new Dimension(1000, 300)); 
-        infoBox.add(txtDesc);
+        txtDesc.setMaximumSize(new Dimension(800, 150)); 
+        txtDesc.setAlignmentX(Component.LEFT_ALIGNMENT);
+        infoPanel.add(txtDesc);
 
-        infoBox.add(Box.createRigidArea(new Dimension(0, 40)));
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        buttonPanel.setOpaque(false);
-        buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT); 
+        JLabel lblSchedule = new JLabel("JADWAL TAYANG");
+        lblSchedule.setFont(new Font("SansSerif", Font.BOLD, 16));
+        lblSchedule.setForeground(Color.WHITE);
+        lblSchedule.setAlignmentX(Component.LEFT_ALIGNMENT);
+        infoPanel.add(lblSchedule);
 
-        JButton btnTrailer = createStyledButton("▶ LIHAT TRAILER", new Color(30, 30, 30), accentBlue, true);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        JPanel timePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        timePanel.setOpaque(false);
+        timePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        String[] times = {"10.00", "13.30", "16.00", "19.30", "21.00"};
+        for(String t : times) {
+            JToggleButton btn = createTimeButton(t);
+            btn.addActionListener(e -> {
+                selectedTime = t;
+                for(Component c : timePanel.getComponents()) {
+                    if(c instanceof JToggleButton) ((JToggleButton)c).setSelected(false);
+                }
+                btn.setSelected(true);
+            });
+            if(t.equals(selectedTime)) btn.setSelected(true);
+            timePanel.add(btn);
+        }
+        infoPanel.add(timePanel);
+
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
+        actionPanel.setOpaque(false);
+        actionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JButton btnTrailer = createActionButton("▷  TRAILER", false);
         btnTrailer.addActionListener(e -> playTrailer(movieData[5]));
         
-        JButton btnBook = createStyledButton("PILIH KURSI", accentBlue, Color.WHITE, false);
-        btnBook.addActionListener(e -> mainFrame.showBookingPanel(movieData));
+        JButton btnBook = createActionButton("BOOK TICKET", true);
+        btnBook.addActionListener(e -> mainFrame.showBookingPanel(movieData, selectedTime));
 
-        buttonPanel.add(btnTrailer);
-        buttonPanel.add(Box.createRigidArea(new Dimension(20, 0))); 
-        buttonPanel.add(btnBook);
-        
-        infoBox.add(buttonPanel);
+        actionPanel.add(btnTrailer);
+        actionPanel.add(btnBook);
+        infoPanel.add(actionPanel);
 
-        content.add(infoBox, gbc);
+        content.add(infoPanel, gbc);
         add(content, BorderLayout.CENTER);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        GradientPaint gp = new GradientPaint(0, 0, bgDark, 0, getHeight(), bgBlack);
-        g2d.setPaint(gp);
-        g2d.fillRect(0, 0, getWidth(), getHeight());
+        Graphics2D g2 = (Graphics2D) g;
+        
+        if (bgImage != null) {
+            g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
+        } else {
+            g2.setColor(new Color(10, 15, 30));
+            g2.fillRect(0, 0, getWidth(), getHeight());
+        }
+
+        g2.setColor(new Color(5, 10, 20, 230)); 
+        g2.fillRect(0, 0, getWidth(), getHeight());
+        
+        GradientPaint gp = new GradientPaint(0, 0, new Color(0,0,0,200), getWidth(), 0, new Color(0,0,0,150));
+        g2.setPaint(gp);
+        g2.fillRect(0, 0, getWidth(), getHeight());
     }
 
-    private JButton createStyledButton(String text, Color bgColor, Color fgColor, boolean isOutline) {
+    private void addMetaTag(JPanel panel, String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        lbl.setForeground(textGray);
+        panel.add(lbl);
+    }
+
+    private void addDivider(JPanel panel) {
+        JLabel lbl = new JLabel("   •   ");
+        lbl.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        lbl.setForeground(new Color(100, 100, 100));
+        panel.add(lbl);
+    }
+
+    private JToggleButton createTimeButton(String text) {
+        JToggleButton btn = new JToggleButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (isSelected()) {
+                    g2.setColor(accentYellow);
+                    g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
+                    setForeground(Color.BLACK);
+                } else {
+                    g2.setColor(new Color(255, 255, 255, 30)); 
+                    g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
+                    g2.setColor(new Color(200, 200, 200));
+                    g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
+                    setForeground(Color.WHITE);
+                }
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        btn.setPreferredSize(new Dimension(90, 35));
+        btn.setFont(new Font("SansSerif", Font.BOLD, 13));
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setContentAreaFilled(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    private JButton createActionButton(String text, boolean isSolid) {
         JButton btn = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                if (getModel().isRollover()) {
-                    if (isOutline) g2.setColor(bgColor.brighter());
-                    else g2.setColor(bgColor.darker());
+                if (isSolid) {
+                    g2.setColor(accentYellow); 
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                    setForeground(Color.BLACK);
                 } else {
-                    g2.setColor(bgColor);
+                    g2.setColor(new Color(255, 255, 255, 30));
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                    g2.setColor(Color.WHITE);
+                    g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
+                    setForeground(Color.WHITE);
                 }
-
-                if (isOutline) {
-                    g2.setStroke(new BasicStroke(2));
-                    g2.drawRoundRect(1, 1, getWidth()-3, getHeight()-3, 10, 10);
-                } else {
-                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-                }
-                
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
-
-        btn.setForeground(fgColor);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        btn.setPreferredSize(new Dimension(180, 50));
+        btn.setFont(new Font("SansSerif", Font.BOLD, 16));
         btn.setFocusPainted(false);
-        btn.setBorderPainted(false); 
+        btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
-        btn.setOpaque(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setPreferredSize(new Dimension(180, 45));
         return btn;
     }
-    
+
     private String formatHarga(String priceStr) {
         try {
             double p = Double.parseDouble(priceStr);
@@ -201,10 +282,6 @@ public class DetailPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Trailer tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        new Thread(() -> {
-            try {
-                Desktop.getDesktop().open(videoFile);
-            } catch (IOException ex) { ex.printStackTrace(); }
-        }).start();
+        new Thread(() -> { try { Desktop.getDesktop().open(videoFile); } catch (IOException ex) {} }).start();
     }
 }

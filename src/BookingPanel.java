@@ -1,227 +1,236 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.GeneralPath;
-import java.io.File;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.QuadCurve2D;
 import java.util.List;
+import java.util.ArrayList;
+import java.io.File;
 
 public class BookingPanel extends JPanel {
     private Main mainFrame;
     private String[] movieData;
+    private String showtime;
     
+    private String selectedSeatNum = null;
     private Thread timerThread;
     private boolean isRunning = false;
     private int timeLeft = 60; 
     private JLabel lblTimer;
+    
+    private List<SeatButton> seatButtons = new ArrayList<>();
 
-    private ImageIcon seatAvailable;
-    private ImageIcon seatBooked;
+    private Color bgMain = new Color(5, 20, 50);
+    private Color seatAvailable = new Color(149, 165, 166);
+    private Color seatBooked = new Color(52, 73, 94);
+    private Color seatSelected = new Color(231, 76, 60);
+    
+    private Color btnGreen = new Color(46, 204, 113);
+    private Color btnRed = new Color(192, 57, 43);
 
-    private final int SEAT_SIZE = 70; 
-    private final int ICON_SIZE = 60; 
-
-    public BookingPanel(Main mainFrame, String[] movieData) {
+    public BookingPanel(Main mainFrame, String[] movieData, String showtime) {
         this.mainFrame = mainFrame;
         this.movieData = movieData;
+        this.showtime = showtime;
 
         setLayout(new BorderLayout());
-        setBackground(new Color(15, 15, 20)); 
-
-        loadSeatIcons();
+        setBackground(bgMain);
 
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(25, 25, 30));
-        header.setBorder(new EmptyBorder(15, 40, 15, 40));
+        header.setOpaque(false);
+        header.setBorder(new EmptyBorder(20, 40, 10, 40));
 
-        JLabel lblTitle = new JLabel("BOOKING: " + movieData[1]);
-        lblTitle.setFont(new Font("SansSerif", Font.BOLD, 24));
-        lblTitle.setForeground(new Color(255, 193, 7)); 
+        JButton btnBack = new JButton();
+        try {
+            String arrowPath = "assets/images/arrow.png"; 
+            if (new File(arrowPath).exists()) {
+                ImageIcon rawIcon = new ImageIcon(arrowPath);
+                Image imgArrow = rawIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+                btnBack.setIcon(new ImageIcon(imgArrow));
+            } else {
+                btnBack.setText("BACK");
+            }
+        } catch (Exception e) {
+            btnBack.setText("BACK");
+        }
+        
+        btnBack.setContentAreaFilled(false);
+        btnBack.setBorderPainted(false);
+        btnBack.setFocusPainted(false);
+        btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnBack.addActionListener(e -> stopSession());
+        
+        JLabel lblTitle = new JLabel("Booking Seats", SwingConstants.CENTER);
+        lblTitle.setFont(new Font("SansSerif", Font.BOLD, 28));
+        lblTitle.setForeground(Color.WHITE);
 
-        lblTimer = new JLabel("Waktu: " + timeLeft + "s");
-        lblTimer.setFont(new Font("Monospaced", Font.BOLD, 22));
+        lblTimer = new JLabel("60s", SwingConstants.RIGHT);
+        lblTimer.setFont(new Font("SansSerif", Font.BOLD, 28));
         lblTimer.setForeground(Color.WHITE);
 
-        header.add(lblTitle, BorderLayout.WEST);
+        header.add(btnBack, BorderLayout.WEST);
+        header.add(lblTitle, BorderLayout.CENTER);
         header.add(lblTimer, BorderLayout.EAST);
+        
         add(header, BorderLayout.NORTH);
 
-        JPanel centerPanel = new JPanel(new GridBagLayout()); 
-        centerPanel.setBackground(new Color(15, 15, 20));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        gbc.gridy = 0;
-        gbc.insets = new Insets(10, 0, 40, 0); 
-        ScreenPanel screenPanel = new ScreenPanel(); 
-        screenPanel.setPreferredSize(new Dimension(800, 70)); 
-        centerPanel.add(screenPanel, gbc);
-
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 0, 0);
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setOpaque(false);
         
-        JPanel seatLayout = new JPanel(new FlowLayout(FlowLayout.CENTER, 60, 0)); 
+        ScreenView screenView = new ScreenView();
+        screenView.setPreferredSize(new Dimension(800, 80));
+        screenView.setOpaque(false); 
+        centerPanel.add(screenView, BorderLayout.NORTH);
+
+        JPanel seatLayout = new JPanel(new FlowLayout(FlowLayout.CENTER, 80, 20));
         seatLayout.setOpaque(false);
 
-        int rows = 5;
-        int colsPerSide = 6; 
+        int rows = 4; 
+        int colsPerSide = 4; 
 
-        JPanel leftBlock = new JPanel(new GridLayout(rows, colsPerSide, 10, 15)); 
+        JPanel leftBlock = new JPanel(new GridLayout(rows, colsPerSide, 15, 15)); 
         leftBlock.setOpaque(false);
         
-        JPanel rightBlock = new JPanel(new GridLayout(rows, colsPerSide, 10, 15));
+        JPanel rightBlock = new JPanel(new GridLayout(rows, colsPerSide, 15, 15));
         rightBlock.setOpaque(false);
 
-        int movieId = Integer.parseInt(movieData[0]);
-        List<String> bookedSeats = DatabaseHelper.getBookedSeats(movieId);
-        char[] rowLabels = {'A', 'B', 'C', 'D', 'E', 'F', 'G'};
+        List<String> bookedSeats = DatabaseHelper.getBookedSeats(Integer.parseInt(movieData[0]), showtime);
+        char[] rowLabels = {'A', 'B', 'C', 'D'};
 
         for (int r = 0; r < rows; r++) {
             char rowChar = rowLabels[r];
-            for (int i = 1; i <= colsPerSide; i++) {
-                String seatNum = rowChar + String.valueOf(i);
-                leftBlock.add(createSeatButton(seatNum, bookedSeats));
+            for (int c = 1; c <= colsPerSide; c++) {
+                String seatNum = rowChar + String.valueOf(c);
+                SeatButton btn = new SeatButton(seatNum, bookedSeats.contains(seatNum));
+                leftBlock.add(btn);
+                seatButtons.add(btn);
             }
-            for (int i = colsPerSide + 1; i <= colsPerSide * 2; i++) {
-                String seatNum = rowChar + String.valueOf(i);
-                rightBlock.add(createSeatButton(seatNum, bookedSeats));
+            for (int c = colsPerSide + 1; c <= colsPerSide * 2; c++) {
+                String seatNum = rowChar + String.valueOf(c);
+                SeatButton btn = new SeatButton(seatNum, bookedSeats.contains(seatNum));
+                rightBlock.add(btn);
+                seatButtons.add(btn);
             }
         }
 
         seatLayout.add(leftBlock);
         seatLayout.add(rightBlock);
-        centerPanel.add(seatLayout, gbc);
-
-        JScrollPane scrollPane = new JScrollPane(centerPanel);
-        scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(new Color(15, 15, 20));
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        add(scrollPane, BorderLayout.CENTER);
-
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        footer.setBackground(new Color(25, 25, 30));
-        footer.setBorder(new EmptyBorder(10, 0, 10, 0));
         
-        JButton btnCancel = new JButton("BATALKAN TRANSAKSI");
-        styleButton(btnCancel, new Color(192, 57, 43));
+        JPanel seatContainer = new JPanel(new GridBagLayout());
+        seatContainer.setOpaque(false);
+        seatContainer.add(seatLayout);
+        
+        centerPanel.add(seatContainer, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
+
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 30));
+        footer.setOpaque(false);
+
+        JButton btnCancel = new RoundedButton("Batalkan Transaksi", btnRed);
         btnCancel.addActionListener(e -> stopSession());
+
+        JButton btnPay = new RoundedButton("Pembayaran", btnGreen);
+        btnPay.addActionListener(e -> handlePayment());
+
         footer.add(btnCancel);
-        
+        footer.add(btnPay);
         add(footer, BorderLayout.SOUTH);
 
         startTimer();
     }
 
-    private class ScreenPanel extends JPanel {
+    class RoundedButton extends JButton {
+        private Color bgColor;
+        public RoundedButton(String text, Color bg) {
+            super(text);
+            this.bgColor = bg;
+            setPreferredSize(new Dimension(220, 55));
+            setForeground(Color.WHITE);
+            setFont(new Font("SansSerif", Font.BOLD, 16));
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
         @Override
         protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            if (getModel().isRollover()) g2.setColor(bgColor.brighter());
+            else g2.setColor(bgColor);
+            
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            
+            g2.dispose();
             super.paintComponent(g);
+        }
+    }
+
+    class SeatButton extends JToggleButton {
+        private String seatNum;
+        private boolean isBooked;
+
+        public SeatButton(String seatNum, boolean isBooked) {
+            this.seatNum = seatNum;
+            this.isBooked = isBooked;
+            setPreferredSize(new Dimension(55, 50));
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setCursor(isBooked ? Cursor.getDefaultCursor() : Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            
+            if(!isBooked) {
+                addActionListener(e -> {
+                    selectedSeatNum = seatNum;
+                    for(SeatButton btn : seatButtons) btn.repaint(); 
+                });
+            }
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+            if (isBooked) g2.setColor(seatBooked); 
+            else if (seatNum.equals(selectedSeatNum)) g2.setColor(seatSelected); 
+            else g2.setColor(seatAvailable); 
+
+            g2.fillRoundRect(5, 0, 45, 35, 8, 8);
+            g2.setColor(g2.getColor().darker());
+            g2.fillRoundRect(5, 30, 45, 15, 8, 8);
+            g2.fillRoundRect(0, 20, 8, 25, 5, 5);
+            g2.fillRoundRect(47, 20, 8, 25, 5, 5);
+        }
+    }
+
+    class ScreenView extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int w = getWidth();
-            int h = getHeight();
-
-            GeneralPath screenShape = new GeneralPath();
-            screenShape.moveTo(50, 10); 
-            screenShape.lineTo(w - 50, 10); 
-            screenShape.lineTo(w - 20, h); 
-            screenShape.lineTo(20, h); 
-            screenShape.closePath();
-
-            GradientPaint gp = new GradientPaint(
-                w / 2, 0, new Color(200, 230, 255, 200), 
-                w / 2, h, new Color(200, 230, 255, 20)  
-            );
+            
+            g2.setColor(new Color(255, 200, 0)); 
+            g2.setStroke(new BasicStroke(4));
+            QuadCurve2D q = new QuadCurve2D.Float(50, 40, w/2, 10, w-50, 40);
+            g2.draw(q);
+            
+            GradientPaint gp = new GradientPaint(w/2, 10, new Color(255,255,255,40), w/2, 80, new Color(0,0,0,0));
             g2.setPaint(gp);
-            g2.fill(screenShape);
-
-            g2.setColor(new Color(255, 255, 255, 100));
-            g2.setFont(new Font("SansSerif", Font.BOLD, 16));
-            FontMetrics fm = g2.getFontMetrics();
-            String text = "LAYAR BIOSKOP";
-            g2.drawString(text, (w - fm.stringWidth(text)) / 2, h / 2 + 5);
+            g2.fill(q);
         }
     }
 
-    private void loadSeatIcons() {
-        try {
-            String path = "assets/images/seat.png"; 
-            if (new File(path).exists()) {
-                ImageIcon icon = new ImageIcon(path);
-                Image img = icon.getImage().getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
-                seatAvailable = new ImageIcon(img);
-                seatBooked = toGrayscale(img); 
-            }
-        } catch (Exception e) { e.printStackTrace(); }
-    }
-
-    private JButton createSeatButton(String seatNum, List<String> bookedList) {
-        JButton btn = new JButton(seatNum);
-        btn.setPreferredSize(new Dimension(SEAT_SIZE, SEAT_SIZE));
-        btn.setHorizontalTextPosition(JButton.CENTER);
-        btn.setVerticalTextPosition(JButton.CENTER);
-        
-        Font normalFont = new Font("SansSerif", Font.BOLD, 14);
-        Font hoverFont = new Font("SansSerif", Font.BOLD, 18); 
-
-        btn.setFont(normalFont);
-        btn.setForeground(Color.WHITE);
-        
-        btn.setBorderPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setFocusPainted(false);
-        btn.setOpaque(false);
-
-        boolean isBooked = bookedList.contains(seatNum);
-
-        if (isBooked) {
-            if (seatAvailable != null) btn.setIcon(seatBooked);
-            else btn.setBackground(Color.DARK_GRAY);
-            btn.setEnabled(false);
-        } else {
-            if (seatAvailable != null) btn.setIcon(seatAvailable);
-            else btn.setBackground(new Color(231, 76, 60));
-            
-            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            
-            btn.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    btn.setFont(hoverFont);
-                    btn.setForeground(Color.YELLOW);
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    btn.setFont(normalFont);
-                    btn.setForeground(Color.WHITE);
-                }
-            });
-            
-            btn.addActionListener(e -> handleBooking(seatNum));
+    private void handlePayment() {
+        if (selectedSeatNum == null) {
+            JOptionPane.showMessageDialog(this, "Pilih kursi dulu!", "Info", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        return btn;
-    }
-
-    private void styleButton(JButton btn, Color bg) {
-        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setPreferredSize(new Dimension(200, 45));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
-
-    private ImageIcon toGrayscale(Image img) {
-        try {
-            java.awt.image.ImageFilter filter = new javax.swing.GrayFilter(true, 50);
-            java.awt.image.ImageProducer producer = new java.awt.image.FilteredImageSource(img.getSource(), filter);
-            return new ImageIcon(Toolkit.getDefaultToolkit().createImage(producer));
-        } catch (Exception e) { return new ImageIcon(img); }
+        isRunning = false; 
+        mainFrame.showPaymentPanel(movieData, showtime, selectedSeatNum);
     }
 
     private void startTimer() {
@@ -231,11 +240,8 @@ public class BookingPanel extends JPanel {
                 try {
                     Thread.sleep(1000);
                     timeLeft--;
-                    SwingUtilities.invokeLater(() -> {
-                        lblTimer.setText("Waktu: " + timeLeft + "s");
-                        if (timeLeft <= 10) lblTimer.setForeground(Color.RED);
-                    });
-                } catch (InterruptedException e) {}
+                    SwingUtilities.invokeLater(() -> lblTimer.setText(timeLeft + "s"));
+                } catch (Exception e) {}
             }
             if (timeLeft == 0 && isRunning) {
                 SwingUtilities.invokeLater(() -> {
@@ -245,25 +251,6 @@ public class BookingPanel extends JPanel {
             }
         });
         timerThread.start();
-    }
-
-    private void handleBooking(String seatNum) {
-        int harga = (int) Double.parseDouble(movieData[3]);
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Booking Kursi: " + seatNum + "\nHarga: Rp " + harga, 
-            "Konfirmasi", JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            isRunning = false;
-            boolean success = DatabaseHelper.saveBooking(mainFrame.getCurrentUser(), Integer.parseInt(movieData[0]), seatNum);
-            if (success) {
-                JOptionPane.showMessageDialog(this, "Berhasil!");
-                mainFrame.showPanel("HOME");
-            } else {
-                JOptionPane.showMessageDialog(this, "Gagal! Kursi sudah terisi.");
-                mainFrame.showPanel("HOME");
-            }
-        }
     }
 
     private void stopSession() {
