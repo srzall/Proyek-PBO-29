@@ -3,8 +3,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 
-public class PaymentPanel extends JPanel {
-    private Main mainFrame;
+public class PaymentPanel extends BasePanel {
+    
     private String[] movieData;
     private String showtime;
     private String seatNum;
@@ -13,18 +13,24 @@ public class PaymentPanel extends JPanel {
     private int timeLeft = 300; 
     private JLabel lblTimer;
 
-    private Color bgMain = new Color(5, 20, 50); 
-    private Color textWhite = Color.WHITE;
     private Color textGray = new Color(170, 170, 170);
 
+
     public PaymentPanel(Main mainFrame, String[] movieData, String showtime, String seatNum) {
-        this.mainFrame = mainFrame;
+        super(mainFrame); 
         this.movieData = movieData;
         this.showtime = showtime;
         this.seatNum = seatNum;
 
+
+        initComponents();
+        startTimer();
+    }
+
+    @Override
+    protected void initComponents() {
         setLayout(new BorderLayout());
-        setBackground(bgMain);
+        setOpaque(false); 
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
@@ -48,11 +54,12 @@ public class PaymentPanel extends JPanel {
         btnBack.setBorderPainted(false);
         btnBack.setFocusPainted(false);
         btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnBack.setForeground(textWhite); 
         btnBack.addActionListener(e -> cancelPayment());
 
         lblTimer = new JLabel("300s", SwingConstants.RIGHT);
         lblTimer.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblTimer.setForeground(Color.WHITE);
+        lblTimer.setForeground(accentYellow); 
 
         header.add(btnBack, BorderLayout.WEST);
         header.add(lblTimer, BorderLayout.EAST);
@@ -67,9 +74,10 @@ public class PaymentPanel extends JPanel {
         gbc.gridy = 0;
         JLabel lblTitle = new JLabel("Pembayaran");
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblTitle.setForeground(Color.WHITE);
+        lblTitle.setForeground(textWhite);
         centerPanel.add(lblTitle, gbc);
 
+     
         gbc.gridy = 1;
         gbc.insets = new Insets(20, 0, 10, 0);
         JLabel lblQR = new JLabel();
@@ -101,7 +109,7 @@ public class PaymentPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 10, 0);
         JLabel lblMovieTitle = new JLabel(movieData[1]);
         lblMovieTitle.setFont(new Font("SansSerif", Font.BOLD, 18));
-        lblMovieTitle.setForeground(Color.WHITE);
+        lblMovieTitle.setForeground(textWhite);
         centerPanel.add(lblMovieTitle, gbc);
 
         gbc.gridy = 4;
@@ -129,12 +137,12 @@ public class PaymentPanel extends JPanel {
         centerPanel.add(btnContinue, gbc);
 
         add(centerPanel, BorderLayout.CENTER);
-
-        startTimer();
     }
 
+
     private void processPayment() {
-        paymentTimer.stop();
+        if (paymentTimer != null) paymentTimer.stop();
+        
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
         SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
@@ -142,7 +150,7 @@ public class PaymentPanel extends JPanel {
             protected Boolean doInBackground() throws Exception {
                 int userId = mainFrame.getCurrentUser();
                 int movieId = Integer.parseInt(movieData[0]);
-                
+        
                 Thread.sleep(500); 
                 
                 return DatabaseHelper.saveBooking(userId, movieId, seatNum, showtime);
@@ -177,6 +185,9 @@ public class PaymentPanel extends JPanel {
         paymentTimer = new Timer(1000, e -> {
             timeLeft--;
             lblTimer.setText(timeLeft + "s");
+            
+            if(timeLeft <= 10) lblTimer.setForeground(Color.RED); 
+
             if (timeLeft <= 0) {
                 paymentTimer.stop();
                 JOptionPane.showMessageDialog(this, "Waktu Pembayaran Habis!");

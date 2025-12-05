@@ -8,27 +8,32 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 
-public class TicketPanel extends JPanel {
-    private Main mainFrame;
+public class TicketPanel extends BasePanel {
+    
     private String[] movieData;
     private String showtime;
     private String seatNum;
     private String bookingCode;
 
-    private Color bgMain = new Color(5, 20, 50); 
     private Color ticketBg = new Color(245, 245, 245); 
     private Color textDark = new Color(30, 30, 30);
     private Color accentRed = new Color(192, 57, 43); 
 
+
     public TicketPanel(Main mainFrame, String[] movieData, String showtime, String seatNum, String bookingCode) {
-        this.mainFrame = mainFrame;
+        super(mainFrame); 
         this.movieData = movieData;
         this.showtime = showtime;
         this.seatNum = seatNum;
         this.bookingCode = bookingCode;
 
+        initComponents();
+    }
+
+    @Override
+    protected void initComponents() {
         setLayout(new BorderLayout());
-        setBackground(bgMain);
+        setOpaque(false); 
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
@@ -36,7 +41,7 @@ public class TicketPanel extends JPanel {
 
         JLabel lblHeader = new JLabel("Your Ticket", SwingConstants.CENTER);
         lblHeader.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblHeader.setForeground(Color.WHITE);
+        lblHeader.setForeground(textWhite); 
         
         JButton btnClose = new JButton() {
             @Override
@@ -107,7 +112,7 @@ public class TicketPanel extends JPanel {
 
         JLabel lblThanks = new JLabel("<html><div style='width:250px'>Terimakasih Telah Menggunakan Aplikasi kami</div></html>");
         lblThanks.setFont(new Font("SansSerif", Font.BOLD, 24));
-        lblThanks.setForeground(Color.WHITE);
+        lblThanks.setForeground(textWhite); 
         lblThanks.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         infoRight.add(lblShow);
@@ -175,8 +180,7 @@ public class TicketPanel extends JPanel {
                         g.setColor(Color.WHITE);
                         g.drawString("No Image", 100, 100);
                     }
-                } catch (Exception e) { 
-                }
+                } catch (Exception e) {}
             }
         };
         lblPoster.setBounds(0, 0, 320, 220); 

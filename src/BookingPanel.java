@@ -4,12 +4,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.QuadCurve2D;
+import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
-import java.io.File;
 
-public class BookingPanel extends JPanel {
-    private Main mainFrame;
+public class BookingPanel extends BasePanel {
+    
     private String[] movieData;
     private String showtime;
     
@@ -20,22 +20,26 @@ public class BookingPanel extends JPanel {
     private JLabel lblTimer;
     
     private List<SeatButton> seatButtons = new ArrayList<>();
-
-    private Color bgMain = new Color(5, 20, 50);
     private Color seatAvailable = new Color(149, 165, 166);
     private Color seatBooked = new Color(52, 73, 94);
     private Color seatSelected = new Color(231, 76, 60);
-    
     private Color btnGreen = new Color(46, 204, 113);
     private Color btnRed = new Color(192, 57, 43);
 
     public BookingPanel(Main mainFrame, String[] movieData, String showtime) {
-        this.mainFrame = mainFrame;
+        super(mainFrame); 
         this.movieData = movieData;
         this.showtime = showtime;
+        initComponents();
+        
 
+        startTimer();
+    }
+
+    @Override
+    protected void initComponents() {
         setLayout(new BorderLayout());
-        setBackground(bgMain);
+        setOpaque(false); 
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
@@ -58,23 +62,23 @@ public class BookingPanel extends JPanel {
         btnBack.setContentAreaFilled(false);
         btnBack.setBorderPainted(false);
         btnBack.setFocusPainted(false);
+        btnBack.setForeground(textWhite); 
         btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnBack.addActionListener(e -> stopSession());
         
         JLabel lblTitle = new JLabel("Booking Seats", SwingConstants.CENTER);
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblTitle.setForeground(Color.WHITE);
+        lblTitle.setForeground(textWhite); 
 
         lblTimer = new JLabel("60s", SwingConstants.RIGHT);
         lblTimer.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblTimer.setForeground(Color.WHITE);
+        lblTimer.setForeground(accentYellow);  
 
         header.add(btnBack, BorderLayout.WEST);
         header.add(lblTitle, BorderLayout.CENTER);
         header.add(lblTimer, BorderLayout.EAST);
         
         add(header, BorderLayout.NORTH);
-
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.setOpaque(false);
         
@@ -136,9 +140,8 @@ public class BookingPanel extends JPanel {
         footer.add(btnCancel);
         footer.add(btnPay);
         add(footer, BorderLayout.SOUTH);
-
-        startTimer();
     }
+
 
     class RoundedButton extends JButton {
         private Color bgColor;
@@ -213,7 +216,7 @@ public class BookingPanel extends JPanel {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int w = getWidth();
             
-            g2.setColor(new Color(255, 200, 0)); 
+            g2.setColor(accentYellow); 
             g2.setStroke(new BasicStroke(4));
             QuadCurve2D q = new QuadCurve2D.Float(50, 40, w/2, 10, w-50, 40);
             g2.draw(q);

@@ -65,7 +65,7 @@ public class DatabaseHelper {
              ResultSet rs = stmt.executeQuery(sql)) {
             
                 while (rs.next()) {
-                    String[] data = new String[7]; 
+                    String[] data = new String[10]; 
                     
                     data[0] = String.valueOf(rs.getInt("movie_id"));
                     data[1] = rs.getString("title");
@@ -76,6 +76,11 @@ public class DatabaseHelper {
                     
                     data[6] = rs.getString("description"); 
                     if (data[6] == null) data[6] = "Tidak ada deskripsi."; 
+            
+                    // --- DATA BARU ---
+                    data[7] = rs.getString("rating");    
+                    data[8] = rs.getString("duration");  
+                    data[9] = rs.getString("showtimes"); 
                     
                     movies.add(data);
                 }
