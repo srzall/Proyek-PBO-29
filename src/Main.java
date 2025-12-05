@@ -47,12 +47,8 @@ public class Main extends JFrame {
         if (!panels.containsKey(name)) {
             JPanel p = null;
             switch (name) {
-                case "LOGIN":
-                    p = new LoginPanel(this);
-                    break;
-                case "HOME":
-                    p = new HomePanel(this);
-                    break;
+                case "LOGIN": p = new LoginPanel(this); break;
+                case "HOME": p = new HomePanel(this); break;
             }
             if (p != null) {
                 panels.put(name, p);
@@ -60,14 +56,13 @@ public class Main extends JFrame {
             }
         }
         
-        if(name.equals("HOME") && panels.get("HOME") != null) {
-            mainPanel.remove(panels.get("HOME"));
-            panels.remove("HOME");
-            JPanel newHome = new HomePanel(this);
-            panels.put("HOME", newHome);
-            mainPanel.add(newHome, "HOME");
+        if (panels.containsKey(name)) {
+            JPanel p = panels.get(name);
+            
+            if (p instanceof Refreshable) {
+                ((Refreshable) p).refreshData();
+            }
         }
-
         cardLayout.show(mainPanel, name);
     }
 

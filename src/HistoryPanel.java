@@ -8,22 +8,26 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 
-public class HistoryPanel extends JPanel {
-    private Main mainFrame;
+public class HistoryPanel extends BasePanel implements Refreshable {
+    
     private DefaultTableModel tableModel;
     private JTable historyTable;
 
-    private Color bgMain = new Color(15, 20, 25); 
     private Color tableHeaderBg = new Color(30, 35, 45); 
     private Color accentBlue = new Color(0, 168, 255); 
     private Color rowEven = new Color(20, 25, 30); 
     private Color rowOdd = new Color(28, 33, 40); 
 
     public HistoryPanel(Main mainFrame) {
-        this.mainFrame = mainFrame;
+        super(mainFrame); 
+        initComponents(); 
+    }
+
+    @Override
+    protected void initComponents() {
         setLayout(new BorderLayout());
-        setBackground(bgMain); 
-        
+        setOpaque(false); 
+
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
         header.setBorder(new EmptyBorder(20, 30, 20, 30));
@@ -75,15 +79,14 @@ public class HistoryPanel extends JPanel {
         };
 
         historyTable = new JTable(tableModel);
-        
-        historyTable.setBackground(bgMain); 
+        historyTable.setBackground(bgDark); 
         historyTable.setFillsViewportHeight(true); 
         historyTable.setGridColor(new Color(40, 40, 50)); 
         
         styleTable(); 
 
         JScrollPane scrollPane = new JScrollPane(historyTable);
-        scrollPane.getViewport().setBackground(bgMain); 
+        scrollPane.getViewport().setBackground(bgDark); 
         scrollPane.setBorder(new EmptyBorder(0, 30, 30, 30)); 
         scrollPane.setOpaque(false);
         
@@ -96,10 +99,6 @@ public class HistoryPanel extends JPanel {
         List<String[]> data = DatabaseHelper.getUserHistory(userId);
 
         for (String[] row : data) {
-            try {
-                double harga = Double.parseDouble(row[3]);
-                row[3] = "Rp " + String.format("%,.0f", harga).replace(',', '.');
-            } catch (Exception e) {}
             tableModel.addRow(row);
         }
     }
@@ -162,5 +161,11 @@ public class HistoryPanel extends JPanel {
         for (int i = 0; i < historyTable.getColumnCount(); i++) {
             historyTable.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
         }
+    }
+
+    @Override
+    public void refreshData() {
+        loadData(); 
+        System.out.println("Data HistoryPanel diperbarui!"); 
     }
 }

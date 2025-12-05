@@ -7,46 +7,56 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-public class DetailPanel extends JPanel {
-    private Main mainFrame;
+public class DetailPanel extends BasePanel {
+    
     private String[] movieData;
     private Image bgImage;
-    private String selectedTime = "10.00";
+    private String selectedTime = ""; 
 
-    private Color accentYellow = new Color(255, 215, 0);
-    private Color textWhite = new Color(245, 245, 245);
     private Color textGray = new Color(200, 200, 200);
+    
 
     public DetailPanel(Main mainFrame, String[] movieData) {
-        this.mainFrame = mainFrame;
+        super(mainFrame);
         this.movieData = movieData;
-
+        
         try {
             if (new File(movieData[4]).exists()) {
                 bgImage = ImageIO.read(new File(movieData[4]));
             }
         } catch (Exception e) {}
 
+        initComponents();
+    }
+
+    @Override
+    protected void initComponents() {
         setLayout(new BorderLayout());
         
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT));
         header.setOpaque(false);
         header.setBorder(new EmptyBorder(30, 40, 0, 0));
         
-        JButton btnBack = new JButton();
-        try {
-            String arrowPath = "assets/images/arrow.png";
-            ImageIcon rawIcon = new ImageIcon(arrowPath);
-            Image imgArrow = rawIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
-            btnBack.setIcon(new ImageIcon(imgArrow));
-        } catch (Exception e) {
-            btnBack.setText("BACK");
-        }
+        JButton btnBack = new JButton("<< BACK"); 
         
+        try {
+            String arrowPath = "assets/images/arrow.png"; 
+            if (new File(arrowPath).exists()) {
+                ImageIcon rawIcon = new ImageIcon(arrowPath);
+                Image imgArrow = rawIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+                btnBack.setIcon(new ImageIcon(imgArrow));
+                btnBack.setText(""); 
+            }
+        } catch (Exception e) {}
+        btnBack.setFont(new Font("SansSerif", Font.BOLD, 14));
+        btnBack.setForeground(textWhite); 
         btnBack.setContentAreaFilled(false);
-        btnBack.setBorderPainted(false);
         btnBack.setFocusPainted(false);
+        btnBack.setBorderPainted(false); 
+        btnBack.setBorder(null);         
+        
         btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnBack.setPreferredSize(new Dimension(100, 40)); 
         
         btnBack.addActionListener(e -> mainFrame.showPanel("HOME"));
         header.add(btnBack);
@@ -69,7 +79,6 @@ public class DetailPanel extends JPanel {
         JLabel lblPoster = new JLabel(new ImageIcon(img));
         lblPoster.setBorder(BorderFactory.createLineBorder(new Color(255,255,255, 50), 1));
         content.add(lblPoster, gbc);
-
         gbc.gridx = 1;
         gbc.weightx = 1.0; 
         
@@ -80,7 +89,7 @@ public class DetailPanel extends JPanel {
 
         JLabel lblTitle = new JLabel("<html>" + movieData[1].toUpperCase() + "</html>");
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 48));
-        lblTitle.setForeground(textWhite);
+        lblTitle.setForeground(textWhite); 
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         infoPanel.add(lblTitle);
 
@@ -90,16 +99,22 @@ public class DetailPanel extends JPanel {
         metaPanel.setOpaque(false);
         metaPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        addMetaTag(metaPanel, movieData[2]);
+        addMetaTag(metaPanel, movieData[2]); 
         addDivider(metaPanel);
-        addMetaTag(metaPanel, "2h 15m");
+        
+        String duration = (movieData.length > 8 && movieData[8] != null) ? movieData[8] : "2h 15m";
+        addMetaTag(metaPanel, duration);
+        
         addDivider(metaPanel);
-        addMetaTag(metaPanel, "⭐ 4.8");
+        
+        String rating = (movieData.length > 7 && movieData[7] != null) ? "⭐ " + movieData[7] : "⭐ 4.5";
+        addMetaTag(metaPanel, rating);
+        
         addDivider(metaPanel);
         
         JLabel lblPrice = new JLabel("Rp " + formatHarga(movieData[3]));
         lblPrice.setFont(new Font("SansSerif", Font.BOLD, 18));
-        lblPrice.setForeground(accentYellow);
+        lblPrice.setForeground(accentYellow); 
         metaPanel.add(lblPrice);
 
         infoPanel.add(metaPanel);
@@ -108,7 +123,7 @@ public class DetailPanel extends JPanel {
 
         JLabel lblSinopsis = new JLabel("SINOPSIS");
         lblSinopsis.setFont(new Font("SansSerif", Font.BOLD, 16));
-        lblSinopsis.setForeground(accentYellow);
+        lblSinopsis.setForeground(accentYellow); 
         lblSinopsis.setAlignmentX(Component.LEFT_ALIGNMENT);
         infoPanel.add(lblSinopsis);
 
@@ -130,7 +145,7 @@ public class DetailPanel extends JPanel {
 
         JLabel lblSchedule = new JLabel("JADWAL TAYANG");
         lblSchedule.setFont(new Font("SansSerif", Font.BOLD, 16));
-        lblSchedule.setForeground(Color.WHITE);
+        lblSchedule.setForeground(textWhite);
         lblSchedule.setAlignmentX(Component.LEFT_ALIGNMENT);
         infoPanel.add(lblSchedule);
 
@@ -140,9 +155,21 @@ public class DetailPanel extends JPanel {
         timePanel.setOpaque(false);
         timePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        String[] times = {"10.00", "13.30", "16.00", "19.30", "21.00"};
-        for(String t : times) {
+        String[] times;
+        if (movieData.length > 9 && movieData[9] != null && !movieData[9].isEmpty()) {
+            times = movieData[9].split(","); 
+        } else {
+            times = new String[]{"10.00", "13.00", "16.00"}; 
+        }
+
+        if (times.length > 0) {
+            selectedTime = times[0].trim();
+        }
+
+        for(String rawT : times) {
+            String t = rawT.trim(); 
             JToggleButton btn = createTimeButton(t);
+            
             btn.addActionListener(e -> {
                 selectedTime = t;
                 for(Component c : timePanel.getComponents()) {
@@ -150,9 +177,11 @@ public class DetailPanel extends JPanel {
                 }
                 btn.setSelected(true);
             });
+            
             if(t.equals(selectedTime)) btn.setSelected(true);
             timePanel.add(btn);
         }
+        
         infoPanel.add(timePanel);
 
         infoPanel.add(Box.createRigidArea(new Dimension(0, 40)));
@@ -177,14 +206,12 @@ public class DetailPanel extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
+        super.paintComponent(g); 
+        
         Graphics2D g2 = (Graphics2D) g;
         
         if (bgImage != null) {
             g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
-        } else {
-            g2.setColor(new Color(10, 15, 30));
-            g2.fillRect(0, 0, getWidth(), getHeight());
         }
 
         g2.setColor(new Color(5, 10, 20, 230)); 
@@ -216,15 +243,13 @@ public class DetailPanel extends JPanel {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 if (isSelected()) {
-                    g2.setColor(accentYellow);
+                    g2.setColor(accentYellow); 
                     g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
                     setForeground(Color.BLACK);
                 } else {
-                    g2.setColor(new Color(255, 255, 255, 30)); 
+                    g2.setColor(new Color(255, 255, 255, 30));
                     g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
-                    g2.setColor(new Color(200, 200, 200));
-                    g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
-                    setForeground(Color.WHITE);
+                    setForeground(textWhite); 
                 }
                 g2.dispose();
                 super.paintComponent(g);
@@ -270,18 +295,25 @@ public class DetailPanel extends JPanel {
     }
 
     private String formatHarga(String priceStr) {
-        try {
-            double p = Double.parseDouble(priceStr);
-            return String.format("%,.0f", p).replace(',', '.');
-        } catch (Exception e) { return priceStr; }
+        try { return String.format("%,.0f", Double.parseDouble(priceStr)).replace(',', '.'); } 
+        catch (Exception e) { return priceStr; }
     }
 
     private void playTrailer(String filePath) {
         File videoFile = new File(filePath);
         if (!videoFile.exists()) {
-            JOptionPane.showMessageDialog(this, "Trailer tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Trailer tidak ditemukan di:\n" + filePath, "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        new Thread(() -> { try { Desktop.getDesktop().open(videoFile); } catch (IOException ex) {} }).start();
+        new Thread(() -> { 
+            try { 
+                Desktop.getDesktop().open(videoFile); 
+            } catch (IOException ex) { 
+                ex.printStackTrace(); 
+                SwingUtilities.invokeLater(() -> 
+                    JOptionPane.showMessageDialog(this, "Gagal memutar video!")
+                );
+            } 
+        }).start();
     }
 }

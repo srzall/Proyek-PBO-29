@@ -5,21 +5,27 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 
-public class LoginPanel extends JPanel {
-    private Main mainFrame;
+public class LoginPanel extends BasePanel {
+    
     private JTextField txtUser;
     private JPasswordField txtPass;
 
-    private Color bgRight = new Color(10, 25, 47);
+    private Color bgRight = new Color(10, 25, 47); 
     private Color btnColor = new Color(0, 122, 255);
     private Color btnHover = new Color(0, 100, 230);
-    private Color textWhite = Color.WHITE;
     private Color textGray = new Color(170, 170, 170);
     private Color inputBorder = new Color(60, 80, 100);
     private Color inputBg = new Color(20, 35, 60);
+    
 
     public LoginPanel(Main mainFrame) {
-        this.mainFrame = mainFrame;
+        super(mainFrame); 
+        initComponents(); 
+    }
+
+    @Override
+    protected void initComponents() {
+    
         setLayout(new GridLayout(1, 2));
 
         JPanel leftPanel = new JPanel() {
@@ -53,7 +59,6 @@ public class LoginPanel extends JPanel {
             }
         };
         add(leftPanel);
-
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBackground(bgRight);
@@ -61,7 +66,7 @@ public class LoginPanel extends JPanel {
 
         JLabel lblBrand = new JLabel("CINETIX");
         lblBrand.setFont(new Font("SansSerif", Font.BOLD, 28));
-        lblBrand.setForeground(textWhite);
+        lblBrand.setForeground(textWhite); 
         lblBrand.setAlignmentX(Component.CENTER_ALIGNMENT); 
         
         JLabel lblWelcome = new JLabel("Welcome Back");
